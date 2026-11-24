@@ -16,7 +16,7 @@ jobs:
         include:
           - { os: ubuntu-latest,    platform: linux,   arch: x64 }
           - { os: ubuntu-24.04-arm, platform: linux,   arch: arm64 }
-          - { os: macos-13,         platform: macos,   arch: x64 }
+          - { os: macos-15-intel,   platform: macos,   arch: x64 }
           - { os: macos-14,         platform: macos,   arch: arm64 }
           - { os: windows-2025,     platform: windows, arch: x64,   cc: x86_64-w64-mingw32-clang }
           - { os: windows-2025,     platform: windows, arch: x86,   cc: i686-w64-mingw32-clang }
