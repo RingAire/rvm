@@ -18,14 +18,30 @@ jobs:
           - { os: ubuntu-24.04-arm, platform: linux,   arch: arm64 }
           - { os: macos-13,         platform: macos,   arch: x64 }
           - { os: macos-14,         platform: macos,   arch: arm64 }
-          - { os: windows-2025,     platform: windows, arch: x64 }
+          - { os: windows-2025,     platform: windows, arch: x64,   cc: x86_64-w64-mingw32-clang }
+          - { os: windows-2025,     platform: windows, arch: x86,   cc: i686-w64-mingw32-clang }
+          - { os: windows-2025,     platform: windows, arch: arm64, cc: aarch64-w64-mingw32-clang }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install pinned LLVM-MinGW
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: |
+          bash scripts/llvm-mingw.sh
+          echo "CC=${{ matrix.cc }}" >> "$GITHUB_ENV"
       - name: build
         shell: bash
-        run: make CONFIG=Release RV_VERSION="${GITHUB_REF_NAME#v}"
+        run: make CONFIG=Release RV_VERSION="${GITHUB_REF_NAME#v}" EXTRA_CFLAGS=-Werror
+      - name: tests
+        if: matrix.platform != 'windows' || matrix.arch == 'x64'
+        shell: bash
+        run: make test
       - name: verify embedded version
+        if: matrix.platform != 'windows' || matrix.arch == 'x64'
         shell: bash
         run: |
           set -euo pipefail
@@ -42,9 +58,19 @@ jobs:
           [ "${{ matrix.platform }}" = "windows" ] && exe=".exe"
           mkdir -p "dist/${name}/bin"
           cp "target/Release/rvm${exe}" "dist/${name}/bin/rvm${exe}"
-          cp README.md README.zh.md LICENSE NOTICE "dist/${name}/"
+          cp README.md README.zh.md MIGRATION.md LICENSE NOTICE "dist/${name}/"
           if [ "${{ matrix.platform }}" = "windows" ]; then
-            (cd dist && 7z a "${name}.zip" "${name}" >/dev/null)
+            export PKG_NAME="${name}"
+            python - <<'PY'
+import os, zipfile
+from pathlib import Path
+name = os.environ["PKG_NAME"]
+dist = Path("dist")
+with zipfile.ZipFile(dist / f"{name}.zip", "w", zipfile.ZIP_DEFLATED) as archive:
+    for path in sorted((dist / name).rglob("*")):
+        if path.is_file():
+            archive.write(path, path.relative_to(dist).as_posix())
+PY
           else
             tar -czf "dist/${name}.tar.gz" -C dist "${name}"
           fi

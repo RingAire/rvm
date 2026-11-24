@@ -20,7 +20,8 @@ else
     endif
 endif
 
-CFLAGS_COMMON := -std=c11 -Wall -Wextra -Wpedantic
+EXTRA_CFLAGS ?=
+CFLAGS_COMMON := -std=c11 -Wall -Wextra -Wpedantic $(EXTRA_CFLAGS)
 ifeq ($(CONFIG),Release)
     CFLAGS_PROFILE := -O2 -DNDEBUG
 else ifeq ($(CONFIG),Debug)
