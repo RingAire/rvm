@@ -258,7 +258,7 @@ static void discard_dir(const char *path) {
 #if defined(RVM_PLATFORM_WINDOWS)
     remove_directory_recursive(path);
 #else
-    char *rm_argv[] = { "rm", "-rf", path, NULL };
+    char *rm_argv[] = { "rm", "-rf", (char *)path, NULL };
     run_program("rm", rm_argv);
 #endif
 }

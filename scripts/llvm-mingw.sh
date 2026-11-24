@@ -12,5 +12,6 @@ curl --fail --location --retry 3 --connect-timeout 30 --max-time 300 \
   "https://github.com/mstorsjo/llvm-mingw/releases/download/${version}/${archive}" \
   --output "${tool_dir}/${archive}"
 printf '%s  %s\n' "$checksum" "${tool_dir}/${archive}" | sha256sum --check --strict
-tar -xf "${tool_dir}/${archive}" -C "$tool_dir"
+# Git Bash GNU tar treats "D:\..." as a remote host; unpack from the directory.
+(cd "$tool_dir" && tar -xf "$archive")
 printf '%s\n' "${tool_dir}/${archive%.tar.xz}/bin" >> "$GITHUB_PATH"

@@ -22,6 +22,9 @@ endif
 
 EXTRA_CFLAGS ?=
 CFLAGS_COMMON := -std=c11 -Wall -Wextra -Wpedantic $(EXTRA_CFLAGS)
+ifneq ($(OS),Windows_NT)
+    CFLAGS_COMMON += -D_POSIX_C_SOURCE=200809L
+endif
 ifeq ($(CONFIG),Release)
     CFLAGS_PROFILE := -O2 -DNDEBUG
 else ifeq ($(CONFIG),Debug)
