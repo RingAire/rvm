@@ -17,7 +17,7 @@
 #include <errno.h>
 
 #ifndef RVM_VERSION
-#define RVM_VERSION "0.1.0"
+#define RVM_VERSION "0.1.1"
 #endif
 
 
@@ -196,7 +196,10 @@ static bool rvm_download(const char *base, const char *version,
     char url[1024];
     int written = snprintf(url, sizeof(url), "%s/v%s/%s", base, version, asset);
     if (written < 0 || (size_t)written >= sizeof(url)) return false;
-    char *curl_argv[] = { "curl", "-fsL", url, "-o", (char *)destination, NULL };
+    /* Release CDNs occasionally reset the connection; retry transient
+     * failures (404 keeps failing fast, so a missing version is still clear). */
+    char *curl_argv[] = { "curl", "-fsSL", "--retry", "3", "--retry-delay", "1",
+                          "--connect-timeout", "20", "-o", (char *)destination, url, NULL };
     return run_program("curl", curl_argv) == 0;
 }
 
@@ -616,7 +619,8 @@ static bool print_remote_index(const char *base) {
     char temp[700];
     snprintf(temp, sizeof(temp), "%s/%s/.index.txt", home, RVM_DIR);
 
-    char *curl_argv[] = { "curl", "-fsL", url, "-o", temp, NULL };
+    char *curl_argv[] = { "curl", "-fsSL", "--retry", "3", "--retry-delay", "1",
+                          "--connect-timeout", "20", "-o", temp, url, NULL };
     if (run_program("curl", curl_argv) != 0) {
         remove(temp);
         return false;
