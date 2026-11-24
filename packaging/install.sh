@@ -98,7 +98,7 @@ curl -fsSL --retry 3 --retry-delay 1 --connect-timeout 20 \
 curl -fsSL --retry 3 --retry-delay 1 --connect-timeout 20 \
     "$BASE/v$VERSION/SHA256SUMS" -o "$WORK/SHA256SUMS"
 
-EXPECTED="$(awk -v asset="$ASSET" '$2 == asset { print $1 }' "$WORK/SHA256SUMS")"
+EXPECTED="$(awk -v asset="$ASSET" '{ name = $2; if (substr(name, 1, 2) == "./") name = substr(name, 3); if (name == asset) print $1 }' "$WORK/SHA256SUMS")"
 if [ -z "$EXPECTED" ]; then
     echo "install.sh: SHA256SUMS has no entry for $ASSET" >&2
     exit 1
@@ -115,7 +115,7 @@ fi
 
 tar -xzf "$WORK/$ASSET" -C "$WORK"
 PAYLOAD="$WORK/rvm-$VERSION-$OS-$ARCH"
-if [ ! -x "$PAYLOAD/bin/rvm" ]; then
+if [ ! -f "$PAYLOAD/bin/rvm" ]; then
     echo "install.sh: unexpected archive layout (bin/rvm missing)" >&2
     exit 1
 fi

@@ -43,7 +43,10 @@ function Get-ExpectedHash {
     param([string]$SumsPath, [string]$Asset)
     foreach ($line in Get-Content -LiteralPath $SumsPath) {
         $parts = $line -split "\s+"
-        if ($parts.Count -ge 2 -and $parts[1] -eq $Asset) { return $parts[0].ToLowerInvariant() }
+        if ($parts.Count -lt 2) { continue }
+        $name = $parts[1]
+        if ($name.StartsWith("./")) { $name = $name.Substring(2) }
+        if ($name -eq $Asset) { return $parts[0].ToLowerInvariant() }
     }
     throw "SHA256SUMS has no entry for $Asset"
 }

@@ -88,7 +88,7 @@ jobs:
           set -euo pipefail
           cp packaging/install.ps1 packaging/uninstall.ps1 packaging/install.sh dist/
           cd dist
-          sha256sum ./* > SHA256SUMS
+          sha256sum -- * > SHA256SUMS
           cat SHA256SUMS
       - name: create release
         env:
