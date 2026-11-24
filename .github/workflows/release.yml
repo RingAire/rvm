@@ -1,0 +1,82 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build / ${{ matrix.platform }}-${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest,    platform: linux,   arch: x64 }
+          - { os: ubuntu-24.04-arm, platform: linux,   arch: arm64 }
+          - { os: macos-13,         platform: macos,   arch: x64 }
+          - { os: macos-14,         platform: macos,   arch: arm64 }
+          - { os: windows-2025,     platform: windows, arch: x64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: build
+        shell: bash
+        run: make CONFIG=Release RV_VERSION="${GITHUB_REF_NAME#v}"
+      - name: verify embedded version
+        shell: bash
+        run: |
+          set -euo pipefail
+          exe=""
+          [ "${{ matrix.platform }}" = "windows" ] && exe=".exe"
+          ./target/Release/rvm${exe} version | grep -F "${GITHUB_REF_NAME#v}"
+      - name: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          name="rvm-${version}-${{ matrix.platform }}-${{ matrix.arch }}"
+          exe=""
+          [ "${{ matrix.platform }}" = "windows" ] && exe=".exe"
+          mkdir -p "dist/${name}/bin"
+          cp "target/Release/rvm${exe}" "dist/${name}/bin/rvm${exe}"
+          cp README.md README.zh.md LICENSE NOTICE "dist/${name}/"
+          if [ "${{ matrix.platform }}" = "windows" ]; then
+            (cd dist && 7z a "${name}.zip" "${name}" >/dev/null)
+          else
+            tar -czf "dist/${name}.tar.gz" -C dist "${name}"
+          fi
+          rm -rf "dist/${name}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rvm-${{ matrix.platform }}-${{ matrix.arch }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    name: publish
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: checksums
+        run: |
+          set -euo pipefail
+          cd dist
+          sha256sum ./* > SHA256SUMS
+          cat SHA256SUMS
+      - name: create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "rvm ${GITHUB_REF_NAME}" \
+            --generate-notes \
+            dist/*
