@@ -368,11 +368,18 @@ static int cmd_install(const char *version) {
     char archive_name[64];
     snprintf(archive_name, sizeof(archive_name), ".download%s", rvm_asset_suffix());
 #if defined(RVM_PLATFORM_WINDOWS)
-    char *extract_argv[] = { "tar", "-xf", archive_name, NULL };
+    /* The Windows archive is a zip. Git Bash's GNU tar cannot read zip and
+     * misparses drive-letter paths, so use the system bsdtar explicitly. */
+    char tar_path[1024];
+    const char *system_root = getenv("SystemRoot");
+    snprintf(tar_path, sizeof(tar_path), "%s\\System32\\tar.exe",
+             (system_root && *system_root) ? system_root : "C:\\Windows");
+    char *extract_argv[] = { tar_path, "-xf", archive_name, NULL };
+    int rc = run_program_in(extract_argv[0], extract_argv, version_dir);
 #else
     char *extract_argv[] = { "tar", "-xzf", archive_name, NULL };
-#endif
     int rc = run_program_in("tar", extract_argv, version_dir);
+#endif
     remove(archive_path);
     if (rc != 0) {
         printf("Failed to extract version %s (need 'tar')\n", version);
