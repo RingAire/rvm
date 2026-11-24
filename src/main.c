@@ -200,6 +200,31 @@ static bool rvm_download(const char *base, const char *version,
     return run_program("curl", curl_argv) == 0;
 }
 
+/* Run a program with `dir` as its working directory. Used for extraction so
+ * tar receives a relative archive name: GNU tar on Git Bash treats a leading
+ * drive letter ("D:...") as a remote host. */
+static int run_program_in(const char *prog, char *const argv[], const char *dir) {
+#if defined(RVM_PLATFORM_WINDOWS)
+    char saved[1024];
+    if (!_getcwd(saved, sizeof(saved))) return -1;
+    if (_chdir(dir) != 0) return -1;
+    int rc = run_program(prog, argv);
+    _chdir(saved);
+    return rc;
+#else
+    pid_t pid = fork();
+    if (pid < 0) return -1;
+    if (pid == 0) {
+        if (chdir(dir) != 0) _exit(127);
+        execvp(prog, argv);
+        _exit(127);
+    }
+    int st = 0;
+    while (waitpid(pid, &st, 0) < 0 && errno == EINTR) {}
+    return WIFEXITED(st) ? WEXITSTATUS(st) : -1;
+#endif
+}
+
 static void get_home_dir(char *out, size_t cap) {
 #if defined(RVM_PLATFORM_WINDOWS)
     /* USERPROFILE is already the full home; HOMEPATH is relative to HOMEDRIVE
@@ -340,12 +365,14 @@ static int cmd_install(const char *version) {
         return 1;
     }
 
+    char archive_name[64];
+    snprintf(archive_name, sizeof(archive_name), ".download%s", rvm_asset_suffix());
 #if defined(RVM_PLATFORM_WINDOWS)
-    char *extract_argv[] = { "tar", "-xf", archive_path, "-C", version_dir, NULL };
+    char *extract_argv[] = { "tar", "-xf", archive_name, NULL };
 #else
-    char *extract_argv[] = { "tar", "-xzf", archive_path, "-C", version_dir, NULL };
+    char *extract_argv[] = { "tar", "-xzf", archive_name, NULL };
 #endif
-    int rc = run_program(extract_argv[0], extract_argv);
+    int rc = run_program_in("tar", extract_argv, version_dir);
     remove(archive_path);
     if (rc != 0) {
         printf("Failed to extract version %s (need 'tar')\n", version);
