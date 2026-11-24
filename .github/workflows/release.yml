@@ -60,17 +60,7 @@ jobs:
           cp "target/Release/rvm${exe}" "dist/${name}/bin/rvm${exe}"
           cp README.md README.zh.md MIGRATION.md LICENSE NOTICE "dist/${name}/"
           if [ "${{ matrix.platform }}" = "windows" ]; then
-            export PKG_NAME="${name}"
-            python - <<'PY'
-import os, zipfile
-from pathlib import Path
-name = os.environ["PKG_NAME"]
-dist = Path("dist")
-with zipfile.ZipFile(dist / f"{name}.zip", "w", zipfile.ZIP_DEFLATED) as archive:
-    for path in sorted((dist / name).rglob("*")):
-        if path.is_file():
-            archive.write(path, path.relative_to(dist).as_posix())
-PY
+            python scripts/ci/pack_windows.py "${name}"
           else
             tar -czf "dist/${name}.tar.gz" -C dist "${name}"
           fi
