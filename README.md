@@ -19,6 +19,35 @@ rvm remote              list published versions
 rvm version             print the rvm version
 ```
 
+## Install
+
+Windows (PowerShell, per-user, no administrator rights):
+
+```powershell
+irm https://github.com/RingAire/rvm/releases/latest/download/install.ps1 -OutFile install.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+The installer verifies `SHA256SUMS`, installs to
+`%LOCALAPPDATA%\Programs\rvm`, adds that directory to the user PATH, and
+registers an entry in Settings > Apps. Uninstall from there, or run
+`%LOCALAPPDATA%\Programs\rvm\uninstall.ps1`.
+
+macOS / Linux:
+
+```sh
+curl -fsSL https://github.com/RingAire/rvm/releases/latest/download/install.sh | sh
+```
+
+Installs to `~/.local/bin`; the script verifies `SHA256SUMS`. For options
+(custom prefix, specific version) download it first:
+
+```sh
+curl -fsSL https://github.com/RingAire/rvm/releases/latest/download/install.sh -o install.sh
+sh install.sh --prefix /usr/local
+sh install.sh --uninstall
+```
+
 ## Distribution contract
 
 `rvm` resolves versions under one base URL:
@@ -52,8 +81,9 @@ Requires a C11 compiler, `curl`, and `tar` (`bsdtar` on Windows).
 
 - Downloads go through `curl -fsL`; a failed install rolls back its version
   directory, and an incomplete directory is replaced on retry.
-- `SHA256SUMS` verification is **not implemented yet**; treat the channel as
-  integrity-unverified until the manifest work lands.
+- The install scripts verify `SHA256SUMS`. `rvm install` (compiler versions)
+  does not verify checksums yet; treat that path as integrity-unverified until
+  the manifest work lands.
 - `rvm` manages only `rev`/`rem` binaries from the published dist tree; it does
   not run project code.
 

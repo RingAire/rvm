@@ -60,8 +60,10 @@ jobs:
           cp "target/Release/rvm${exe}" "dist/${name}/bin/rvm${exe}"
           cp README.md README.zh.md MIGRATION.md LICENSE NOTICE "dist/${name}/"
           if [ "${{ matrix.platform }}" = "windows" ]; then
+            cp packaging/install.ps1 packaging/uninstall.ps1 "dist/${name}/"
             python scripts/ci/pack_windows.py "${name}"
           else
+            cp packaging/install.sh "dist/${name}/"
             tar -czf "dist/${name}.tar.gz" -C dist "${name}"
           fi
           rm -rf "dist/${name}"
@@ -76,6 +78,7 @@ jobs:
     needs: build
     runs-on: ubuntu-24.04
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -83,6 +86,7 @@ jobs:
       - name: checksums
         run: |
           set -euo pipefail
+          cp packaging/install.ps1 packaging/uninstall.ps1 packaging/install.sh dist/
           cd dist
           sha256sum ./* > SHA256SUMS
           cat SHA256SUMS

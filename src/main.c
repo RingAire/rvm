@@ -17,7 +17,7 @@
 #include <errno.h>
 
 #ifndef RVM_VERSION
-#define RVM_VERSION "0.1.1"
+#define RVM_VERSION "0.1.2"
 #endif
 
 

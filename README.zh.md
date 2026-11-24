@@ -17,6 +17,34 @@ rvm remote             列出已发布版本
 rvm version            打印 rvm 版本
 ```
 
+## 安装
+
+Windows（PowerShell，按用户安装，无需管理员权限）：
+
+```powershell
+irm https://github.com/RingAire/rvm/releases/latest/download/install.ps1 -OutFile install.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+安装器会校验 `SHA256SUMS`，安装到 `%LOCALAPPDATA%\Programs\rvm`，把该目录加入
+用户 PATH，并在“设置 > 应用”中注册卸载项；也可以直接运行
+`%LOCALAPPDATA%\Programs\rvm\uninstall.ps1` 卸载。
+
+macOS / Linux：
+
+```sh
+curl -fsSL https://github.com/RingAire/rvm/releases/latest/download/install.sh | sh
+```
+
+默认安装到 `~/.local/bin`，脚本会校验 `SHA256SUMS`。需要自定义前缀或指定版本时，
+先下载脚本：
+
+```sh
+curl -fsSL https://github.com/RingAire/rvm/releases/latest/download/install.sh -o install.sh
+sh install.sh --prefix /usr/local
+sh install.sh --uninstall
+```
+
 ## 发布契约
 
 所有版本都在同一个 base 下解析：
@@ -47,7 +75,8 @@ make test            # 分发契约测试（本地 HTTP 服务器，不联网）
 ## 安全说明
 
 - 下载使用 `curl -fsL`；安装失败会回滚版本目录，半成品目录会在重试时被替换。
-- **尚未实现 `SHA256SUMS` 校验**；在 manifest 落地前，该通道不提供完整性保证。
+- 安装脚本会校验 `SHA256SUMS`；`rvm install`（安装编译器版本）尚未校验，
+  在 manifest 落地前该路径不提供完整性保证。
 - `rvm` 只管理发布树里的 `rev`/`rem`，不执行项目代码。
 
 ## 许可证
