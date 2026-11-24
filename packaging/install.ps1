@@ -102,7 +102,7 @@ try {
     }
     New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
     Copy-Item -LiteralPath $binary -Destination (Join-Path $InstallDir "rvm.exe") -Force
-    foreach ($name in @("LICENSE", "NOTICE", "README.md", "README.zh.md")) {
+    foreach ($name in @("LICENSE", "NOTICE", "README.md", "README.en.md")) {
         $candidate = Join-Path $payload $name
         if (Test-Path -LiteralPath $candidate) { Copy-Item -LiteralPath $candidate -Destination $InstallDir -Force }
     }

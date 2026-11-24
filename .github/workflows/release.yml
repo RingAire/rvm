@@ -58,7 +58,7 @@ jobs:
           [ "${{ matrix.platform }}" = "windows" ] && exe=".exe"
           mkdir -p "dist/${name}/bin"
           cp "target/Release/rvm${exe}" "dist/${name}/bin/rvm${exe}"
-          cp README.md README.zh.md MIGRATION.md LICENSE NOTICE "dist/${name}/"
+          cp README.md README.en.md MIGRATION.md LICENSE NOTICE "dist/${name}/"
           if [ "${{ matrix.platform }}" = "windows" ]; then
             cp packaging/install.ps1 packaging/uninstall.ps1 "dist/${name}/"
             python scripts/ci/pack_windows.py "${name}"

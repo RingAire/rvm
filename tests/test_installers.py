@@ -58,6 +58,7 @@ def build_release(site: Path) -> None:
             archive.write(BIN, f"{PAYLOAD}/bin/rvm.exe")
             archive.write(ROOT / "packaging" / "uninstall.ps1", f"{PAYLOAD}/uninstall.ps1")
             archive.write(ROOT / "README.md", f"{PAYLOAD}/README.md")
+            archive.write(ROOT / "README.en.md", f"{PAYLOAD}/README.en.md")
             archive.write(ROOT / "LICENSE", f"{PAYLOAD}/LICENSE")
     else:
         with tarfile.open(asset, "w:gz") as archive:
@@ -65,6 +66,7 @@ def build_release(site: Path) -> None:
                 (BIN, f"{PAYLOAD}/bin/rvm", 0o755),
                 (ROOT / "packaging" / "install.sh", f"{PAYLOAD}/install.sh", 0o644),
                 (ROOT / "README.md", f"{PAYLOAD}/README.md", 0o644),
+                (ROOT / "README.en.md", f"{PAYLOAD}/README.en.md", 0o644),
                 (ROOT / "LICENSE", f"{PAYLOAD}/LICENSE", 0o644),
             ):
                 info = tarfile.TarInfo(name)
