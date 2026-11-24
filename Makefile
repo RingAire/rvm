@@ -6,12 +6,14 @@ CONFIG ?= Release
 
 ifeq ($(OS),Windows_NT)
     EXE := .exe
+    PYTHON ?= python
     MKDIR_P := mkdir -p
     ifeq ($(origin CC),default)
         CC := gcc
     endif
 else
     EXE :=
+    PYTHON ?= python3
     MKDIR_P := mkdir -p
     ifeq ($(origin CC),default)
         CC := cc
@@ -50,7 +52,7 @@ $(OBJ): src/main.c
 	$(CC) $(CFLAGS_COMMON) $(CFLAGS_PROFILE) -c -o "$@" "$<"
 
 test: $(BIN)
-	RVM_BIN="$(abspath $(BIN))" python -m unittest discover -s tests -v
+	RVM_TEST_ROOT="$(abspath target/test-tmp)" RVM_BIN="$(abspath $(BIN))" 		python -m unittest discover -s tests -v
 
 clean:
 	rm -rf target
