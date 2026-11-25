@@ -2,6 +2,7 @@ name: ci
 
 on:
   push:
+    branches: ["**"]   # tags are covered by release.yml
   pull_request:
 
 permissions:
